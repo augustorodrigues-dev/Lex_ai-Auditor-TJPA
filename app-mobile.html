@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="theme-color" content="#122A4D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Custódia TJ — app móvel (NFC)</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+<script src="assets/js/data.js" defer></script>
+<script src="assets/js/state.js" defer></script>
+<script src="assets/js/feedback.js" defer></script>
+<script src="assets/js/reader.js" defer></script>
+<script src="assets/js/sync.js" defer></script>
+<script src="assets/js/navigation.js" defer></script>
+<script src="assets/js/views.js" defer></script>
+<script src="assets/js/ui.js" defer></script>
+<script src="assets/js/app.js" defer></script>
+</head>
+<body>
+
+<!-- Barra institucional do Judiciário -->
+<div class="inst">
+  <b>Poder Judiciário</b><span class="sep">·</span><span>Tribunal de Justiça do Estado do Pará</span>
+  <span class="right" id="instRight">Comarca de Belém</span>
+</div>
+
+<!-- App bar -->
+<header class="appbar">
+  <div class="crest" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M12 2 3 6v2h18V6l-9-4zM5 9v8H3v2h18v-2h-2V9h-2v8h-3V9h-2v8h-2V9H5z"/></svg>
+  </div>
+  <div class="ti">
+    <b id="abTitulo">Custódia de Bens</b>
+    <span id="abSub">Setor de Patrimônio · TJPA</span>
+  </div>
+  <div class="acts">
+    <button class="iconbtn" id="btnFila" data-action="abrirFila" aria-label="Fila de sincronização">⟳<span class="b" id="filaN">0</span></button>
+    <button class="iconbtn" data-action="ir" data-value="perfil" aria-label="Perfil e ajustes" id="btnPerfilIco">👤</button>
+  </div>
+</header>
+
+<!-- Status de conexão -->
+<div class="conn" id="conn"><span class="dot"></span><span id="connTxt">Online · tudo sincronizado</span>
+  <button data-action="toggleOffline" id="connBtn">simular queda</button></div>
+
+<main>
+
+<!-- ============ HOJE ============ -->
+<section class="view" id="v-hoje">
+  <div class="vhead">
+    <div><h2 id="saudacao">Bom dia, Maria</h2><p id="resumoDia">3 ações dependem de você hoje.</p></div>
+  </div>
+
+  <div class="procbox">
+    <div class="l">Unidade e processo em foco</div>
+    <div class="v">1ª Vara Cível de Belém · SEI 26.0.000148/2026-11</div>
+    <div class="m">Guia de remessa GR-2026-0148 · 200 itens · recebida em 29/10/2026</div>
+  </div>
+
+  <div class="kpis" id="kpisHoje"></div>
+
+  <div class="sech"><h3>Fila de hoje</h3><span class="ln"></span><span class="n" id="nFila">4</span></div>
+  <div id="listaHoje"></div>
+
+  <div class="note">
+    <b>Regra do TJ:</b> bem apreendido em processo tem <b>dupla custódia</b> — patrimonial e processual.
+    A ficha mostra o nº CNJ validado (<code>0012345-67.2026.8.14.0301</code>) e o depositário nomeado nos autos.
+  </div>
+</section>
+
+<!-- ============ LER BEM (NFC) ============ -->
+<section class="view" id="v-ler">
+  <div class="vhead">
+    <div><h2>Ler bem</h2><p>Aproxime o aparelho da plaqueta. NFC identifica; QR e código são o plano B.</p></div>
+  </div>
+
+  <div class="reader" id="reader">
+    <div class="st">
+      <div class="waves" aria-hidden="true">
+        <span class="ring"></span><span class="ring"></span><span class="ring"></span>
+        <span class="chipic"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-7.07 17.07l1.41-1.41A8 8 0 1 1 20 12h2A10 10 0 0 0 12 2zm0 4a6 6 0 0 0-4.24 10.24l1.41-1.41A4 4 0 1 1 16 12h2a6 6 0 0 0-6-6zm0 4a2 2 0 0 0-2 2h4a2 2 0 0 0-2-2z"/></svg></span>
+      </div>
+      <h2 id="rdTitulo">Aguardando plaqueta</h2>
+      <p id="rdTexto">Encoste o celular na etiqueta NFC do bem. A leitura é registrada com data, hora, local e operador.</p>
+      <div class="mode"><span class="dot"></span><span id="rdModo">NFC · Web NFC API</span></div>
+    </div>
+  </div>
+
+  <div class="result" id="result" role="status" aria-live="polite"></div>
+
+  <div class="sess" id="sessBox">
+    <div class="top">Sessão de leitura — <span id="sessCtx">Almoxarifado Central · Sala 3</span><span class="n" id="sessN">0 leituras</span></div>
+    <div class="pbar"><i class="g progress-empty" id="pgG"></i><i class="y progress-empty" id="pgY"></i><i class="r progress-empty" id="pgR"></i></div>
+    <div class="leg">
+      <span><i class="legend-ok"></i>Confirmado <b id="lgG">0</b></span>
+      <span><i class="legend-warn"></i>Atenção <b id="lgY">0</b></span>
+      <span><i class="legend-error"></i>Problema <b id="lgR">0</b></span>
+    </div>
+  </div>
+
+  <div class="btnrow mb-14">
+    <button class="btn pri" id="btnLerNfc" data-action="lerNFC">📶 Ler com NFC</button>
+    <button class="btn sec" data-action="modoQR">▦ QR / código de barras</button>
+  </div>
+
+  <div class="search">
+    <span aria-hidden="true">⌨</span>
+    <input id="inManual" placeholder="Digitar plaqueta ou nº de série" autocomplete="off" autocapitalize="characters" aria-label="Entrada manual">
+    <button class="btn pri sm" data-action="lerManual">OK</button>
+  </div>
+
+  <div class="sech"><h3>Plaqueta de teste</h3><span class="ln"></span><span class="n">NDEF</span></div>
+  <div class="taglist" id="taglist"></div>
+
+  <div class="note" id="nfcNote"></div>
+</section>
+
+<!-- ============ BENS ============ -->
+<section class="view" id="v-bens">
+  <div class="vhead"><div><h2>Bens</h2><p id="bensSub">Carga da unidade · toque para ver a ficha completa.</p></div></div>
+  <div class="search"><span aria-hidden="true">🔍</span><input id="fBens" placeholder="Plaqueta, descrição, responsável ou processo" aria-label="Buscar bens"><span class="k" id="bensCount">10</span></div>
+  <div class="chips" id="chipsBens"></div>
+  <div id="listaBens"></div>
+</section>
+
+<!-- ============ PENDÊNCIAS ============ -->
+<section class="view" id="v-pend">
+  <div class="vhead"><div><h2 id="pendTitulo">Pendências</h2><p>Aprovação em lote só para itens do mesmo tipo. Negativa exige motivo.</p></div></div>
+  <div class="chips" id="chipsPend"></div>
+  <div id="listaPend"></div>
+  <div class="btnrow mt-12" id="bulkPendBox">
+    <button class="btn sec" data-action="selAll">Selecionar visíveis</button>
+    <button class="btn pri" data-action="aprovarSel">Aprovar selecionadas</button>
+  </div>
+</section>
+
+<!-- ============ MEUS BENS ============ -->
+<section class="view" id="v-meus">
+  <div class="vhead"><div><h2>Meus bens</h2><p>Sua carga patrimonial e o que espera seu aceite.</p></div></div>
+  <div class="kpis" id="kpisMeus"></div>
+  <div class="sech"><h3>Aceites pendentes</h3><span class="ln"></span><span class="n" id="nAceites">2</span></div>
+  <div id="listaAceites"></div>
+  <button class="btn gld blk" id="btnAceiteLote" data-action="abrirAceite">Aceitar todos com uma assinatura</button>
+  <div class="sech"><h3>Minha carga</h3><span class="ln"></span><span class="n">6 bens</span></div>
+  <div id="listaMeus"></div>
+  <div class="signbox">
+    <b>Assinatura por tipo de ato (Lei 14.063/2020):</b> aceite comum = simples · Termo de Responsabilidade e baixa = avançada gov.br · cautela externa e atas = qualificada ICP-Brasil. O app grava o <b>fator e o selo usados</b>.
+  </div>
+</section>
+
+<!-- ============ PERFIL ============ -->
+<section class="view" id="v-perfil">
+  <div class="vhead"><div><h2>Perfil e ajustes</h2><p>Perfil define o que você vê; permissão define o que pode fazer.</p></div></div>
+
+  <div class="card profile-card">
+    <div id="pfIni" class="profile-avatar">MR</div>
+    <div class="flex-content">
+      <b id="pfNome" class="profile-name">Maria R. Souza</b>
+      <div id="pfInfo" class="profile-info">matrícula 20.441-7 · gov.br ouro</div>
+      <div id="pfPerfis" class="mt-5"></div>
+    </div>
+  </div>
+
+  <div class="sech"><h3>Perfil de trabalho</h3><span class="ln"></span></div>
+  <div class="card">
+    <label for="selPerfilMob" class="field-label">Assumir perfil (demonstração)</label>
+    <select id="selPerfilMob" class="profile-select"></select>
+    <div class="note mt-10" id="pfNota"></div>
+  </div>
+
+  <div class="sech"><h3>Leitura e dispositivo</h3><span class="ln"></span></div>
+  <div class="card">
+    <div class="setrow"><div class="bd"><b>NFC</b><span id="nfcStatus">verificando…</span></div><button class="sw" role="switch" aria-checked="true" id="swNfc" data-action="tglSw" data-value="NFC"></button></div>
+    <div class="setrow"><div class="bd"><b>Som de confirmação</b><span>verde, âmbar e vermelho têm sons distintos</span></div><button class="sw" role="switch" aria-checked="true" id="swSom" data-action="tglSw" data-value="Som"></button></div>
+    <div class="setrow"><div class="bd"><b>Vibração</b><span>35 ms confirmado · padrão duplo em atenção · longo em erro</span></div><button class="sw" role="switch" aria-checked="true" id="swVib" data-action="tglSw" data-value="Vibração"></button></div>
+    <div class="setrow"><div class="bd"><b>Contagem cega</b><span>bipa sem ver a lista prevista; divergências só no fim</span></div><button class="sw" role="switch" aria-checked="true" id="swCega" data-action="tglSw" data-value="Contagem cega"></button></div>
+    <div class="setrow"><div class="bd"><b>Geolocalização nas fotos</b><span>protege o operador; pode ser desligada por decisão do órgão</span></div><button class="sw" role="switch" aria-checked="false" id="swGeo" data-action="tglSw" data-value="Geolocalização"></button></div>
+    <div class="setrow border-bottom-none"><div class="bd"><b>Texto grande</b><span>aumenta fonte e alvo de toque</span></div><button class="sw" role="switch" aria-checked="false" id="swBig" data-action="tglBig"></button></div>
+  </div>
+
+  <div class="sech"><h3>Documentos do processo</h3><span class="ln"></span></div>
+  <div class="card">
+    <div class="row document-row" data-action="toast" data-value="Termo de Responsabilidade gerado em PDF/A e juntado ao SEI como documento assinado.">
+      <div class="ic">📄</div><div class="bd"><b>Gerar Termo no SEI</b><span>PDF/A · assinatura avançada · nº do documento retornado</span></div><div class="rt"><span class="tag info"><span class="i">›</span></span></div>
+    </div>
+    <div class="row document-row-divider" data-action="toast" data-value="Guia de transferência emitida com QR de verificação pública.">
+      <div class="ic">🔁</div><div class="bd"><b>Guia de transferência</b><span>dupla assinatura · origem e destino</span></div><div class="rt"><span class="tag info"><span class="i">›</span></span></div>
+    </div>
+    <div class="row document-row-divider" data-action="toast" data-value="Certidão Nada Consta emitida com código de alta entropia e QR público.">
+      <div class="ic">🎖</div><div class="bd"><b>Certidão Nada Consta</b><span>verificação pública por QR, sem login</span></div><div class="rt"><span class="tag info"><span class="i">›</span></span></div>
+    </div>
+  </div>
+
+  <div class="btnrow mt-16">
+    <button class="btn sec" data-action="abrir" data-value="mSobre">Sobre</button>
+    <button class="btn dan" data-action="sair">Encerrar sessão</button>
+  </div>
+</section>
+
+</main>
+
+<!-- Navegação inferior -->
+<nav class="bottomnav" id="nav" aria-label="Navegação principal"></nav>
+
+<!-- Ficha do bem (bottom sheet) -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitulo">
+  <div class="bg" data-action="fecharSheet"></div>
+  <div class="pn">
+    <div class="grab" aria-hidden="true"></div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<!-- Aceite em lote -->
+<div class="modal" id="mAceite" role="dialog" aria-modal="true" aria-labelledby="acTitulo">
+  <div class="bg" data-action="fechar" data-value="mAceite"></div>
+  <div class="bx">
+    <h3 id="acTitulo">Confirmar aceite</h3>
+    <div class="sub">Revise antes de assinar. O aceite gera Termo de Responsabilidade e registro encadeado no log.</div>
+    <div id="acResumo"></div>
+    <div class="signbox">
+      <label class="chk"><input type="checkbox" id="chkConf" data-change="confirmarAssinatura">
+        <span>Declaro que <b>recebi fisicamente</b> os bens, nas condições descritas, e assumo guarda e conservação (IN SEDAP 205/1988, item 7.11).</span></label>
+      <label class="chk"><input type="checkbox" id="chkRess"><span>Registrar <b>ressalva</b> em algum item (exige foto).</span></label>
+      <div class="signature-details">Assinatura: <b>gov.br avançada</b> · selo <b id="seloMob">ouro</b> · fator: biometria do aparelho</div>
+    </div>
+    <div class="btnrow mt-14">
+      <button class="btn sec" data-action="fechar" data-value="mAceite">Voltar</button>
+      <button class="btn pri" id="btnAssinar" disabled data-action="assinar">Assinar e aceitar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fila de sincronização -->
+<div class="modal" id="mFila" role="dialog" aria-modal="true" aria-labelledby="flTitulo">
+  <div class="bg" data-action="fechar" data-value="mFila"></div>
+  <div class="bx">
+    <h3 id="flTitulo">Fila de sincronização</h3>
+    <div class="sub">Cada ação tem <b>Idempotency-Key</b>: sincronizar duas vezes não duplica evento no log.</div>
+    <div id="listaFila"></div>
+    <div class="btnrow mt-12">
+      <button class="btn sec" data-action="fechar" data-value="mFila">Fechar</button>
+      <button class="btn pri" data-action="sincronizar">Sincronizar agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sobre -->
+<div class="modal" id="mSobre" role="dialog" aria-modal="true">
+  <div class="bg" data-action="fechar" data-value="mSobre"></div>
+  <div class="bx">
+    <h3>Custódia de Bens — versão móvel</h3>
+    <div class="sub">v3.2 · protótipo de demonstração com dados fictícios</div>
+    <p class="about-text">
+      PWA offline-first para o Tribunal de Justiça do Estado do Pará. Leitura por <b>NFC</b> (Web NFC API),
+      QR/código de barras e entrada manual. Log append-only com hash encadeado, perfis por permissão e escopo,
+      dupla assinatura nas movimentações e integração prevista com SEI/PROAD, folha/RH e sistema contábil.
+    </p>
+    <div class="note">Nenhum dado real é transmitido nesta demonstração.</div>
+    <button class="btn pri blk mt-14" data-action="fechar" data-value="mSobre">Fechar</button>
+  </div>
+</div>
+
+<!-- Login -->
+<div class="login" id="telaLogin">
+  <div class="crest" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#122A4D"><path d="M12 2 3 6v2h18V6l-9-4zM5 9v8H3v2h18v-2h-2V9h-2v8h-3V9h-2v8h-2V9H5z"/></svg></div>
+  <h1>Custódia de Bens</h1>
+  <p>Tribunal de Justiça do Estado do Pará · Setor de Patrimônio. Entre com sua conta gov.br ou e-mail institucional.</p>
+  <label for="loginPerfil">Perfil de demonstração</label>
+  <select id="loginPerfil"></select>
+  <label for="loginEmail">E-mail institucional (alternativo)</label>
+  <input id="loginEmail" type="email" inputmode="email" placeholder="nome.sobrenome@tjpa.jus.br">
+  <button class="govbtn" data-action="entrar" data-value="gov.br"><span aria-hidden="true">🇧🇷</span> Entrar com gov.br</button>
+  <button class="alt" data-action="entrar" data-value="e-mail institucional + PIN">Entrar com e-mail institucional</button>
+  <div class="fine">Ao entrar, o sistema registra o <b>fator de autenticação</b> e o <b>selo de confiabilidade</b> (prata/ouro) no log de auditoria. Dados tratados com base em execução de políticas públicas (LGPD, art. 7º, III). Sem armazenamento de remuneração.</div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+</body>
+</html>
